@@ -3,8 +3,8 @@
 from distutils.core import setup
 
 setup(
-    name='simple-elastic',
-    packages=['simple-elastic'],
+    name='selastic',
+    packages=['selastic'],
     version='v0.1',
     description='A simple wrapper for the elasticsearch package.',
     author='Jonas Waeber',
