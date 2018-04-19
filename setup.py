@@ -4,7 +4,7 @@ setup(
     name='simple-elastic',
     packages=['simple-elastic'],
     version='1.0',
-    description='',
+    description='A simple wrapper for the elasticsearch package.',
     author='Jonas Waeber',
     author_email='jonaswaeber@gmail.com',
     install_requires=['elasticsearch'],
