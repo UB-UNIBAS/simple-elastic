@@ -77,7 +77,6 @@ class ElasticIndex:
             scroll_id = response['_scroll_id']
             yield [source['_source'] for source in response['hits']['hits']]
             response = self.instance.scroll(scroll_id=scroll_id, scroll=scroll)
-            self.instance.clear_scroll(scroll_id=scroll_id)
 
     def get(self, identifier):
         """Get a single document with an id. Returns None if it is not found."""
