@@ -89,7 +89,7 @@ class ElasticIndex:
 
     def index_into(self, document, id):
         """Index a single document into the index."""
-        self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=int(id))
+        self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
 
     def bulk(self, data: list, identifier_key: str, op_type='index'):
         """
