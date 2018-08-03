@@ -20,6 +20,7 @@ class ElasticIndex:
         self.doc_type = doc_type
         self.url = url
         self.timeout = timeout
+        self.match_all = {"query": {"match_all": {}}}
 
     @staticmethod
     def _default_settings():
@@ -50,7 +51,7 @@ class ElasticIndex:
         """Search the index with a query. Can fetch at most 10'000 items. Use scan_index if more are needed."""
         logging.info('Download all documents from index %s.', self.index)
         if query is None:
-            query = {"query": {"match_all": {}}}
+            query = self.match_all
         results = list()
         data = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size)
         for items in data['hits']['hits']:
@@ -60,13 +61,23 @@ class ElasticIndex:
     def scan_index(self, query=None):
         """Scans the entire index end returns each result as a list."""
         if query is None:
-            query = {"query": {"match_all": {}}}
+            query = self.match_all
         logging.info('Download all documents from index %s with query %s.', self.index, query)
         results = list()
         data = scan(self.instance, index=self.index, doc_type=self.doc_type, query=query)
         for items in data:
             results.append(items['_source'])
         return results
+
+    def scroll(self, query=None, scroll='5m', size=100):
+        """Scroll an index with the specified search query."""
+        query = self.match_all if query is None else query
+        response = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size, scroll=scroll)
+        while len(response['hits']['hits']) > 0:
+            scroll_id = response['_scroll_id']
+            yield [source['_source'] for source in response['hits']['hits']]
+            response = self.instance.scroll(scroll_id=scroll_id, scroll=scroll)
+            self.instance.clear_scroll(scroll_id=scroll_id)
 
     def get(self, identifier):
         """Get a single document with an id. Returns None if it is not found."""
