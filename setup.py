@@ -3,6 +3,7 @@
 from distutils.core import setup
 import os
 import re
+import sys
 
 
 def read(filename):
@@ -10,6 +11,11 @@ def read(filename):
 
 
 version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', read('simple_elastic/__init__.py'), re.MULTILINE).group(1)
+
+if sys.argv[-1] == 'publish':
+    os.system("python setup.py sdist")
+    os.system('twine upload dist/simple-elastic-{}.tar.gz -r pypi'.format(version))
+    sys.exit()
 
 setup(
     name='simple-elastic',

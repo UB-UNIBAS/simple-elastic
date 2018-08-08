@@ -55,7 +55,10 @@ class ElasticIndex:
         results = list()
         data = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size)
         for items in data['hits']['hits']:
-            results.append(items['_source'])
+            if '_source' in items:
+                results.append(items['_source'])
+            else:
+                results.append(items)
         return results
 
     def scan_index(self, query=None):
@@ -66,7 +69,10 @@ class ElasticIndex:
         results = list()
         data = scan(self.instance, index=self.index, doc_type=self.doc_type, query=query)
         for items in data:
-            results.append(items['_source'])
+            if '_source' in items:
+                results.append(items['_source'])
+            else:
+                results.append(items)
         return results
 
     def scroll(self, query=None, scroll='5m', size=100):
@@ -75,7 +81,7 @@ class ElasticIndex:
         response = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size, scroll=scroll)
         while len(response['hits']['hits']) > 0:
             scroll_id = response['_scroll_id']
-            yield [source['_source'] for source in response['hits']['hits']]
+            yield [source['_source'] if '_source' in source else source for source in response['hits']['hits']]
             response = self.instance.scroll(scroll_id=scroll_id, scroll=scroll)
 
     def get(self, identifier):
@@ -83,7 +89,10 @@ class ElasticIndex:
         logging.info('Download document with id ' + str(identifier) + '.')
         try:
             record = self.instance.get(index=self.index, doc_type=self.doc_type, id=identifier)
-            return record['_source']
+            if '_source' in record:
+                return record['_source']
+            else:
+                return record
         except NotFoundError:
             return None
 
