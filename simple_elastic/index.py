@@ -184,9 +184,14 @@ class ElasticIndex:
         :param kwargs:          Overwrite ElasticIndex __init__ params.
         :return:
         """
-        data = self.scan_index()
         if 'url' not in kwargs:
             kwargs['url'] = self.url
-        new_index = ElasticIndex(new_index_name, doc_type=self.doc_type, timeout=self.timeout, **kwargs)
-        new_index.bulk(data, identifier_key)
+        if 'doc_type' not in kwargs:
+            kwargs['doc_type'] = self.doc_type
+        if 'mapping' not in kwargs:
+            kwargs['mapping'] = self.mapping
+        new_index = ElasticIndex(new_index_name, **kwargs)
+
+        for results in self.scroll(size=500):
+            new_index.bulk(results, identifier_key)
         return new_index
