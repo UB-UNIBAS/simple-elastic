@@ -1,4 +1,4 @@
-from .simple_elastic import ElasticIndex
+from simple_elastic.index import ElasticIndex
 
 
 __version__ = '0.1.8'

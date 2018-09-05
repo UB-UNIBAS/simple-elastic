@@ -146,6 +146,27 @@ class ElasticIndex:
         """Index a single document into the index."""
         self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
 
+    def update(self, doc: dict, doc_id: str):
+        """Partial update to a single document.
+
+        Uses the Update API with the specified partial document.
+        """
+        body = {
+            'doc': doc
+        }
+        self.instance.update(self.index, self.doc_type, doc_id, body=body)
+
+    def script_update(self, script: str, params: dict, doc_id: str):
+        """Uses painless script to update a document."""
+        body = {
+            'script': {
+                'source': script,
+                'lang': 'painless',
+                'params': params
+            }
+        }
+        self.instance.update(self.index, self.doc_type, doc_id, body=body)
+
     def bulk(self, data: list, identifier_key: str, op_type='index'):
         """
         Takes a list of dictionaries and an identifier key and indexes everything into this index.
