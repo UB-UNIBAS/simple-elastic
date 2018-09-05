@@ -22,6 +22,8 @@ if sys.argv[-1] == 'publish':
     os.system('twine upload dist/simple-elastic-{}.tar.gz -r pypi'.format(version))
     sys.exit()
 
+long_description = read('README.rst')
+
 setup(
     name='simple-elastic',
     packages=['simple_elastic'],
