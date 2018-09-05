@@ -1,9 +1,14 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
+import sys
 import os
 import re
-import sys
+from setuptools import setup
+
+try:
+    from semantic_release import setup_hook
+    setup_hook(sys.argv)
+except ImportError:
+    pass
 
 
 def read(filename):
@@ -26,6 +31,7 @@ setup(
     author_email='jonaswaeber@gmail.com',
     install_requires=['elasticsearch'],
     url='https://github.com/UB-UNIBAS/simple-elastic',
+    long_description=long_description,
     download_url='https://github.com/UB-UNIBAS/simple-elastic/archive/v' + version + '.tar.gz',
     keywords=['elasticsearch', 'elastic'],
     classifiers=[],
