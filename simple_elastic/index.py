@@ -6,6 +6,8 @@ from elasticsearch.exceptions import NotFoundError
 import json
 import logging
 
+from typing import Union
+
 
 class ElasticIndex:
     """Represents a single Elastic Index on a host.
@@ -156,15 +158,16 @@ class ElasticIndex:
         }
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
-    def script_update(self, script: str, params: dict, doc_id: str):
+    def script_update(self, script: str, params: Union[dict, None], doc_id: str):
         """Uses painless script to update a document."""
         body = {
             'script': {
                 'source': script,
-                'lang': 'painless',
-                'params': params
+                'lang': 'painless'
             }
         }
+        if params is not None:
+            body['script']['params'] = params
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
     def bulk(self, data: list, identifier_key: str, op_type='index'):
