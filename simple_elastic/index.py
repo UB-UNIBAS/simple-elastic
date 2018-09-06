@@ -37,18 +37,24 @@ class ElasticIndex:
     timeout:
         Specify after how long the connection to the cluster should time out in seconds. Default is 300 seconds.
 
+    replace:
+        When True will replace an existing index, by deleting the old index. This is necessary when the mapping
+        needs to be replaced.
+
     """
 
     def __init__(self, index, doc_type,
                  url='http://localhost:9200',
                  mapping=None,
                  settings=None,
-                 timeout=300):
+                 timeout=300,
+                 replace=False):
         self.instance = Elasticsearch([url], timeout=timeout)
         self.index = index
         self.mapping = mapping
         self.settings = settings
-
+        if replace:
+            self.instance.indices.delete(index)
         if not self.instance.indices.exists(index):
             self.create()
         self.doc_type = doc_type
