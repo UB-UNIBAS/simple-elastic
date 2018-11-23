@@ -1,0 +1,5 @@
+
+
+
+class ElasticCluster(object): 
+    pass
