@@ -245,6 +245,9 @@ class ElasticIndex:
         if file_name == '':
             file_name = self.index
 
+        if not file_name.endswith('.json'):
+            file_name += '.json'
+
         store = path + file_name
         with open(store, 'w') as fp:
             json.dump(export, fp, **kwargs)
