@@ -1,5 +1,0 @@
-
-
-
-class ElasticCluster(object): 
-    pass

@@ -2,6 +2,3 @@ dist/
 build/
 .pytest_cache/
 MANIFEST
-.python-version
-.idea/*
-.vscode/*
