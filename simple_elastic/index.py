@@ -93,8 +93,9 @@ class ElasticIndex:
     def search(self, query=None, size=100):
         """Search the index with a query.
 
-        Limited to an index with size 10'000. Will not fetch all results if the index is larger
-        than this. Use `scan_index` or `scroll` to query larger indexes."""
+        Can at most return 10'000 results from a search. If the search would yield more than 10'000 hits, only the first 10'000 are returned.
+        The default number of hits returned is 100.
+        """
         logging.info('Download all documents from index %s.', self.index)
         if query is None:
             query = self.match_all
@@ -225,3 +226,27 @@ class ElasticIndex:
         for results in self.scroll(size=500):
             new_index.bulk(results, identifier_key)
         return new_index
+
+    def dump(self, path: str, file_name: str = "", **kwargs: dict):
+        """
+        Dumps the entire index into a json file. 
+
+        :param path: The path to directory where the dump should be stored.
+        :param file: Name of the file the dump should be stored in. If empty the index name is used.
+        :param kwargs: Keyword arguments for the json converter. (ex. indent=4, ensure_ascii=False)
+        """
+        export = list()
+        for results in self.scroll():
+            export.extend(results)
+
+        if not path.endswith('/'):
+            path += '/'
+
+        if file_name == '':
+            file_name = self.index
+
+        store = path + file_name
+        with open(store, 'w') as fp:
+            json.dump(export, fp, **kwargs)
+
+        logging.info("Extracted %s records from the index %s and stored them in %s/%s.", len(export), self.index, path, file_name)
