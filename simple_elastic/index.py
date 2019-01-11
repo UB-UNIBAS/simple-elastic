@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from elasticsearch.helpers import scan
-from elasticsearch.exceptions import NotFoundError
+from elasticsearch.exceptions import NotFoundError, RequestError
 
 import json
 import logging
@@ -151,9 +151,15 @@ class ElasticIndex:
         except NotFoundError:
             return None
 
-    def index_into(self, document, id):
+    def index_into(self, document, id) -> bool:
         """Index a single document into the index."""
-        self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
+        try:
+            self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
+        except RequestError as ex:
+            logging.error(ex)
+            return False
+        else:
+            return True
 
     def update(self, doc: dict, doc_id: str):
         """Partial update to a single document.
@@ -177,13 +183,15 @@ class ElasticIndex:
             body['script']['params'] = params
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
-    def bulk(self, data: list, identifier_key: str, op_type='index'):
+    def bulk(self, data: list, identifier_key: str, op_type='index') -> bool:
         """
         Takes a list of dictionaries and an identifier key and indexes everything into this index.
 
         :param data:            List of dictionaries containing the data to be indexed.
         :param identifier_key:  The name of the dictionary element which should be used as _id.
         :param op_type:         What should be done: 'index', 'delete', 'update'.
+
+        :returns                Returns True if all the messages were indexed without errors. False otherwise.
         """
         bulk_objects = []
         for document in data:
@@ -203,7 +211,10 @@ class ElasticIndex:
             logging.error(str(errors[0] - len(bulk_objects)) + ' documents could not be indexed/updated/deleted.')
             for error in errors[1]:
                 logging.error(str(error))
-        logging.debug('Finished bulk %s.', op_type)
+            return False
+        else:
+            logging.debug('Finished bulk %s.', op_type)
+            return True
 
     def reindex(self, new_index_name: str, identifier_key: str, **kwargs) -> 'ElasticIndex':
         """Reindex the entire index.
