@@ -6,7 +6,7 @@ from elasticsearch.exceptions import NotFoundError, RequestError
 import json
 import logging
 
-from typing import Union
+from typing import Union, List, Dict
 
 
 class ElasticIndex:
@@ -187,12 +187,13 @@ class ElasticIndex:
             body['script']['params'] = params
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
-    def bulk(self, data: list, identifier_key: str, op_type='index') -> bool:
+    def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index') -> bool:
         """
         Takes a list of dictionaries and an identifier key and indexes everything into this index.
 
         :param data:            List of dictionaries containing the data to be indexed.
-        :param identifier_key:  The name of the dictionary element which should be used as _id.
+        :param identifier_key:  The name of the dictionary element which should be used as _id. This will be removed from
+                                the body.
         :param op_type:         What should be done: 'index', 'delete', 'update'.
 
         :returns                Returns True if all the messages were indexed without errors. False otherwise.
@@ -202,6 +203,9 @@ class ElasticIndex:
             bulk_object = dict()
             bulk_object['_op_type'] = op_type
             bulk_object['_id'] = document[identifier_key]
+            document.pop(identifier_key)
+            if bulk_object['_id'] == '':
+                bulk_object.pop('_id')
             if op_type == 'index':
                 bulk_object['_source'] = document
             elif op_type == 'update':
