@@ -187,7 +187,7 @@ class ElasticIndex:
             body['script']['params'] = params
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
-    def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index') -> bool:
+    def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index', upsert=False) -> bool:
         """
         Takes a list of dictionaries and an identifier key and indexes everything into this index.
 
@@ -195,7 +195,7 @@ class ElasticIndex:
         :param identifier_key:  The name of the dictionary element which should be used as _id. This will be removed from
                                 the body.
         :param op_type:         What should be done: 'index', 'delete', 'update'.
-
+        :param upsert:          The update op_type can be upserted, which will create a document if not already present.
         :returns                Returns True if all the messages were indexed without errors. False otherwise.
         """
         bulk_objects = []
@@ -210,6 +210,8 @@ class ElasticIndex:
                 bulk_object['_source'] = document
             elif op_type == 'update':
                 bulk_object['doc'] = document
+                if upsert:
+                    bulk_object['doc_as_upsert'] = True
             bulk_objects.append(bulk_object)
             logging.debug(str(bulk_object))
         logging.info('Start bulk index for ' + str(len(bulk_objects)) + ' objects.')
