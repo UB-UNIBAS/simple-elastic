@@ -193,7 +193,8 @@ class ElasticIndex:
 
         :param data:            List of dictionaries containing the data to be indexed.
         :param identifier_key:  The name of the dictionary element which should be used as _id. This will be removed from
-                                the body.
+                                the body. Is ignored when None or empty string. This will cause elastic
+                                to create their own _id.
         :param op_type:         What should be done: 'index', 'delete', 'update'.
         :param upsert:          The update op_type can be upserted, which will create a document if not already present.
         :returns                Returns True if all the messages were indexed without errors. False otherwise.
@@ -202,10 +203,11 @@ class ElasticIndex:
         for document in data:
             bulk_object = dict()
             bulk_object['_op_type'] = op_type
-            bulk_object['_id'] = document[identifier_key]
-            document.pop(identifier_key)
-            if bulk_object['_id'] == '':
-                bulk_object.pop('_id')
+            if identifier_key is not None and identifier_key != '':
+                bulk_object['_id'] = document[identifier_key]
+                document.pop(identifier_key)
+                if bulk_object['_id'] == '':
+                    bulk_object.pop('_id')
             if op_type == 'index':
                 bulk_object['_source'] = document
             elif op_type == 'update':
