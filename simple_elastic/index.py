@@ -187,7 +187,7 @@ class ElasticIndex:
             body['script']['params'] = params
         self.instance.update(self.index, self.doc_type, doc_id, body=body)
 
-    def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index', upsert=False) -> bool:
+    def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index', upsert=False, keep_id_key=False) -> bool:
         """
         Takes a list of dictionaries and an identifier key and indexes everything into this index.
 
@@ -205,7 +205,8 @@ class ElasticIndex:
             bulk_object['_op_type'] = op_type
             if identifier_key is not None and identifier_key != '':
                 bulk_object['_id'] = document[identifier_key]
-                document.pop(identifier_key)
+                if not keep_id_key:
+                    document.pop(identifier_key)
                 if bulk_object['_id'] == '':
                     bulk_object.pop('_id')
             if op_type == 'index':
