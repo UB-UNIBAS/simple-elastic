@@ -221,10 +221,11 @@ class ElasticIndex:
             bulk_objects.append(bulk_object)
             logging.debug(str(bulk_object))
         logging.info('Start bulk index for ' + str(len(bulk_objects)) + ' objects.')
-        errors = bulk(self.instance, actions=bulk_objects, index=self.index, doc_type=self.doc_type, raise_on_error=False)
+        errors = bulk(self.instance, actions=bulk_objects, index=self.index, doc_type=self.doc_type,
+                      raise_on_error=False)
         logging.info(str(errors[0]) + ' documents were successfully indexed/updated/deleted.')
         if errors[0] - len(bulk_objects) != 0:
-            logging.error(str(errors[0] - len(bulk_objects)) + ' documents could not be indexed/updated/deleted.')
+            logging.error(str(len(bulk_objects) - errors[0]) + ' documents could not be indexed/updated/deleted.')
             for error in errors[1]:
                 logging.error(str(error))
             return False
