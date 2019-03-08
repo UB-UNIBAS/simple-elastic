@@ -65,9 +65,9 @@ class ElasticIndex:
     @staticmethod
     def _default_settings():
         return {
-            'number_of_shards': 1,
-            'number_of_replicas': 0,
-            'auto_expand_replicas': False,
+            'number_of_shards': 5,
+            'number_of_replicas': 1,
+            'auto_expand_replicas': True,
             'refresh_interval': '1s'
 
         }
