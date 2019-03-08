@@ -111,10 +111,17 @@ class ElasticIndex:
             results = data['hits']['hits']
         return results
 
-    def scan_index(self, query=None):
-        """Scan the index with query.
+    def scan_index(self, query: Union[Dict[str, str] | None] = None) -> List[Dict[str, str]]:
+        """Scan the index with the query.
 
-        Returns a list of all results."""
+        Will return any number of results above 10'000. Important to note is, that
+        all the data is loaded into memory at once and returned. This works only with small
+        data sets. Use scroll otherwise which returns a generator to cycle through the resources
+        in set chunks.
+
+        :param query: The query used to scan the index. Default None will return the entire index.
+        :returns list of dicts: The list of dictionaries contains all the documents without metadata.
+        """
         if query is None:
             query = self.match_all
         logging.info('Download all documents from index %s with query %s.', self.index, query)
@@ -200,6 +207,8 @@ class ElasticIndex:
                                 to create their own _id.
         :param op_type:         What should be done: 'index', 'delete', 'update'.
         :param upsert:          The update op_type can be upserted, which will create a document if not already present.
+        :param keep_id_key      Determines if the value designated as the identifier_key should be kept
+                                as part of the document or removed from it.
         :returns                Returns True if all the messages were indexed without errors. False otherwise.
         """
         bulk_objects = []
@@ -260,7 +269,7 @@ class ElasticIndex:
         Dumps the entire index into a json file. 
 
         :param path: The path to directory where the dump should be stored.
-        :param file: Name of the file the dump should be stored in. If empty the index name is used.
+        :param file_name: Name of the file the dump should be stored in. If empty the index name is used.
         :param kwargs: Keyword arguments for the json converter. (ex. indent=4, ensure_ascii=False)
         """
         export = list()
