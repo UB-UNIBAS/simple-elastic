@@ -43,24 +43,24 @@ class ElasticIndex:
 
     """
 
-    def __init__(self, index, doc_type,
-                 url='http://localhost:9200',
-                 mapping=None,
-                 settings=None,
-                 timeout=300,
-                 replace=False):
-        self.instance = Elasticsearch([url], timeout=timeout)
-        self.index = index
-        self.mapping = mapping
-        self.settings = settings
+    def __init__(self, index: str, doc_type: str,
+                 url: str ='http://localhost:9200',
+                 mapping: Union[Dict[str, str] | None] = None,
+                 settings: Union[Dict[str, str] | None] = None,
+                 timeout: int = 300,
+                 replace: bool = False):
+        self.instance: Elasticsearch = Elasticsearch([url], timeout=timeout)
+        self.index: str = index
+        self.mapping: Union[Dict[str, str] | None] = mapping
+        self.settings: Union[Dict[str, str] | None] = settings
         if replace:
             self.instance.indices.delete(index)
         if not self.instance.indices.exists(index):
             self.create()
-        self.doc_type = doc_type
-        self.url = url
-        self.timeout = timeout
-        self.match_all = {"query": {"match_all": {}}}
+        self.doc_type: str = doc_type
+        self.url: str = url
+        self.timeout: int = timeout
+        self.match_all: Dict[str, str] = {"query": {"match_all": {}}}
 
     @staticmethod
     def _default_settings():
