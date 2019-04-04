@@ -45,8 +45,8 @@ class ElasticIndex:
 
     def __init__(self, index: str, doc_type: str,
                  url: str ='http://localhost:9200',
-                 mapping: Union[Dict[str, str] | None] = None,
-                 settings: Union[Dict[str, str] | None] = None,
+                 mapping: Union[Dict[str, str], None] = None,
+                 settings: Union[Dict[str, str], None] = None,
                  timeout: int = 300,
                  replace: bool = False):
         self.instance: Elasticsearch = Elasticsearch([url], timeout=timeout)
@@ -111,7 +111,7 @@ class ElasticIndex:
             results = data['hits']['hits']
         return results
 
-    def scan_index(self, query: Union[Dict[str, str] | None] = None) -> List[Dict[str, str]]:
+    def scan_index(self, query: Union[Dict[str, str], None] = None) -> List[Dict[str, str]]:
         """Scan the index with the query.
 
         Will return any number of results above 10'000. Important to note is, that
