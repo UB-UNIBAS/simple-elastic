@@ -83,7 +83,7 @@ class ElasticIndex:
             body['settings'] = self._default_settings()
         self.instance.indices.create(self.index, body)
 
-    def delete(self):
+    def delete_index(self):
         """Deletes this index from elasticsearch.
 
         IMPORTANT: This will delete all data. So use with caution!
@@ -169,6 +169,17 @@ class ElasticIndex:
         """Index a single document into the index."""
         try:
             self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
+        except RequestError as ex:
+            logging.error(ex)
+            return False
+        else:
+            return True
+
+    def delete(self, doc_id: str) -> bool:
+        """Delete a document with id."""
+
+        try:
+            self.instance.delete(self.index, self.doc_type, doc_id)
         except RequestError as ex:
             logging.error(ex)
             return False
