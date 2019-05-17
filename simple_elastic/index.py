@@ -69,7 +69,6 @@ class ElasticIndex:
             'number_of_replicas': 1,
             'auto_expand_replicas': True,
             'refresh_interval': '1s'
-
         }
 
     def create(self):
@@ -89,6 +88,30 @@ class ElasticIndex:
         IMPORTANT: This will delete all data. So use with caution!
         """
         self.instance.indices.delete(self.index)
+
+    def add_to_alias(self, alias: str):
+        """Adds this index to alias.
+
+        :param alias: The alias this index is added to.
+        :return:
+        """
+        self.instance.indices.update_aliases(body={
+            "actions": [
+                {"add": {"index": self.index, "alias": alias}}
+            ]
+        })
+
+    def remove_from_alias(self, alias: str):
+        """Removes this index from alias.
+
+        :param alias: The alias this index is removed from.
+        """
+
+        self.instance.indices.update_aliases(body={
+            "actions": [
+                {"remove": {"index": self.index, "alias": alias}}
+            ]
+        })
 
     def search(self, query=None, size=100, unpack=True):
         """Search the index with a query.
