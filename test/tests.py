@@ -50,3 +50,7 @@ class TestElasticIndex(object):
         self.index.remove_from_alias('test1')
         with pytest.raises(NotFoundError):
             self.index.instance.indices.get_alias('test1')
+
+    def test_count(self):
+        result = self.index.count()
+        assert result == 7

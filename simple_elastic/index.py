@@ -110,6 +110,14 @@ class ElasticIndex:
             ]
         })
 
+    def count(self, query=None) -> int:
+        """Count the number of documents found within this index.
+
+        :param query: [Optional] A query can be used to restrict the counted documents.
+        """
+        result = self.instance.count(index=self.index, body=query)
+        return result['count']
+
     def search(self, query=None, size=100, unpack=True):
         """Search the index with a query.
 
