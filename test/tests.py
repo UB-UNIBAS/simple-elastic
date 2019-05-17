@@ -1,5 +1,7 @@
 from simple_elastic import ElasticIndex
+from elasticsearch.exceptions import NotFoundError
 
+import pytest
 import sys
 import logging
 
@@ -9,10 +11,10 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 class TestElasticIndex(object):
 
     def setup_class(self):
-        self.index = ElasticIndex('test', 'document')
+        self.index = ElasticIndex('test')
 
     def teardown_class(self):
-        self.index.delete()
+        self.index.delete_index()
 
     def test_scroll(self):
         self.index.index_into({'test': True}, 1)
@@ -41,3 +43,10 @@ class TestElasticIndex(object):
     def test_search_not_unpack(self):
         result = self.index.search(unpack=False)
         assert len(result) == 7
+
+    def test_alias(self):
+        self.index.add_to_alias('test1')
+        assert self.index.instance.indices.get_alias('test1')
+        self.index.remove_from_alias('test1')
+        with pytest.raises(NotFoundError):
+            self.index.instance.indices.get_alias('test1')

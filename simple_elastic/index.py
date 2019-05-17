@@ -43,7 +43,7 @@ class ElasticIndex:
 
     """
 
-    def __init__(self, index: str, doc_type: str,
+    def __init__(self, index: str,
                  url: str ='http://localhost:9200',
                  mapping: Union[Dict[str, str], None] = None,
                  settings: Union[Dict[str, str], None] = None,
@@ -57,7 +57,6 @@ class ElasticIndex:
             self.instance.indices.delete(index)
         if not self.instance.indices.exists(index):
             self.create()
-        self.doc_type: str = doc_type
         self.url: str = url
         self.timeout: int = timeout
         self.match_all: Dict[str, str] = {"query": {"match_all": {}}}
@@ -66,9 +65,7 @@ class ElasticIndex:
     def _default_settings():
         return {
             'number_of_shards': 5,
-            'number_of_replicas': 1,
-            'auto_expand_replicas': True,
-            'refresh_interval': '1s'
+            'number_of_replicas': 1
         }
 
     def create(self):
@@ -123,7 +120,7 @@ class ElasticIndex:
         if query is None:
             query = self.match_all
         results = list()
-        data = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size)
+        data = self.instance.search(index=self.index, body=query, size=size)
         if unpack:
             for items in data['hits']['hits']:
                 if '_source' in items:
@@ -149,7 +146,7 @@ class ElasticIndex:
             query = self.match_all
         logging.info('Download all documents from index %s with query %s.', self.index, query)
         results = list()
-        data = scan(self.instance, index=self.index, doc_type=self.doc_type, query=query)
+        data = scan(self.instance, index=self.index, query=query)
         for items in data:
             if '_source' in items:
                 results.append(items['_source'])
@@ -163,7 +160,7 @@ class ElasticIndex:
         Works as a generator. Will yield `size` results per iteration until all hits are returned.
         """
         query = self.match_all if query is None else query
-        response = self.instance.search(index=self.index, doc_type=self.doc_type, body=query, size=size, scroll=scroll)
+        response = self.instance.search(index=self.index, body=query, size=size, scroll=scroll)
         while len(response['hits']['hits']) > 0:
             scroll_id = response['_scroll_id']
             logging.debug(response)
@@ -180,7 +177,7 @@ class ElasticIndex:
         to search an id.)"""
         logging.info('Download document with id ' + str(identifier) + '.')
         try:
-            record = self.instance.get(index=self.index, doc_type=self.doc_type, id=identifier)
+            record = self.instance.get(index=self.index, id=identifier)
             if '_source' in record:
                 return record['_source']
             else:
@@ -191,7 +188,7 @@ class ElasticIndex:
     def index_into(self, document, id) -> bool:
         """Index a single document into the index."""
         try:
-            self.instance.index(index=self.index, doc_type=self.doc_type, body=json.dumps(document, ensure_ascii=False), id=id)
+            self.instance.index(index=self.index, body=json.dumps(document, ensure_ascii=False), id=id)
         except RequestError as ex:
             logging.error(ex)
             return False
@@ -202,7 +199,7 @@ class ElasticIndex:
         """Delete a document with id."""
 
         try:
-            self.instance.delete(self.index, self.doc_type, doc_id)
+            self.instance.delete(self.index, doc_id)
         except RequestError as ex:
             logging.error(ex)
             return False
@@ -217,7 +214,7 @@ class ElasticIndex:
         body = {
             'doc': doc
         }
-        self.instance.update(self.index, self.doc_type, doc_id, body=body)
+        self.instance.update(self.index, doc_id, body=body)
 
     def script_update(self, script: str, params: Union[dict, None], doc_id: str):
         """Uses painless script to update a document.
@@ -232,7 +229,7 @@ class ElasticIndex:
         }
         if params is not None:
             body['script']['params'] = params
-        self.instance.update(self.index, self.doc_type, doc_id, body=body)
+        self.instance.update(self.index, doc_id, body=body)
 
     def bulk(self, data: List[Dict[str, str]], identifier_key: str, op_type='index', upsert=False, keep_id_key=False) -> bool:
         """
@@ -267,7 +264,7 @@ class ElasticIndex:
             bulk_objects.append(bulk_object)
             logging.debug(str(bulk_object))
         logging.info('Start bulk index for ' + str(len(bulk_objects)) + ' objects.')
-        errors = bulk(self.instance, actions=bulk_objects, index=self.index, doc_type=self.doc_type,
+        errors = bulk(self.instance, actions=bulk_objects, index=self.index,
                       raise_on_error=False)
         logging.info(str(errors[0]) + ' documents were successfully indexed/updated/deleted.')
         if errors[0] - len(bulk_objects) != 0:
@@ -291,8 +288,6 @@ class ElasticIndex:
         """
         if 'url' not in kwargs:
             kwargs['url'] = self.url
-        if 'doc_type' not in kwargs:
-            kwargs['doc_type'] = self.doc_type
         if 'mapping' not in kwargs:
             kwargs['mapping'] = self.mapping
         new_index = ElasticIndex(new_index_name, **kwargs)
